@@ -13,6 +13,7 @@ class Clan:
     description = ""
     members_count = 0
     motto = ""
+    updated_at = ""
     #Stronghold statistics
     skirmish = {
         'fb_6': {'value': '', 'rank': '', 'rank_delta': ''},
@@ -35,6 +36,7 @@ class Clan:
         self.description = json['description']
         self.members_count = json['members_count']
         self.motto = json['motto']
+        self.updated_at = json['updated_at']
 
     def getRating(self, id):
         api_url = "https://api.worldoftanks.eu/wot/clanratings/clans/?application_id=0ecfda2435a084d16fa9e02ea75ee0db&clan_id=%s" % (id)
