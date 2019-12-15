@@ -113,4 +113,4 @@ async def skirmish(ctx, tag: str, tier: str):
 async def setDaily(ctx, arg):
     sendRatingDaily.start(ctx.channel.id, arg)
 
-bot.run('NjU0ODA1Nzk2NDk1OTQ5ODM3.XfU9vw.DdjahgKeXHLOD_oJU3WyyyWolNM')
+bot.run('NjU0ODA1Nzk2NDk1OTQ5ODM3.XfY1dQ.pVGpXwFdQe9_Or0F06s3rdr_bkk')
