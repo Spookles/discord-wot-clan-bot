@@ -8,11 +8,11 @@ import asyncio
 
 clan = Clan()
 send_time='20:00'
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix=':')
 clanIsSet = False
 
 def getClan(tag):
-    api_url = "https://api.worldoftanks.eu/wot/clans/list/?application_id=0ecfda2435a084d16fa9e02ea75ee0db&search=%s" % (tag)
+    api_url = "https://api.worldoftanks.eu/wot/clans/list/?application_id=0ecfda2435a084d16fa9e02ea75ee0db&search={}".format(tag)
     response = requests.get(api_url)
     if(response.json()['status'] == "ok" and
        response.json()['meta']['count'] >= 1):
@@ -31,7 +31,7 @@ def getClan(tag):
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
 
-@tasks.loop(seconds=50)
+@tasks.loop(seconds=59)
 async def sendRatingDaily(id: int, tag: str):
     channel = bot.get_channel(id)
     now = datetime.datetime.strftime(datetime.datetime.now(), '%H:%M')
@@ -54,21 +54,17 @@ async def sendRatingDaily(id: int, tag: str):
         else:
             await channel.send("Invalid clan tag")
 
-    if clanIsSet == True:
-        for member in clan.players:
-            member.retrieveTanks()
-            loopCount = 0
-            if member.newMarks[0] != 0:
-                for newMarks in member.newMarks:
-                    await channel.send("**{}** has gained a new mark on his **{}** he had **{}** and now it is **{}** good stuff!".format(member.name, newMarks.name, newMarks.getPreviousMark(), newMarks.getMark()))
-                    loopCount+=1
-                    break
-                member.newMarks = [0] * 100
-            else:
-                await channel.send("No new marks for {}".format(member.name))
-            break
-    else:
-        await channel.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
+        if clanIsSet == True:
+            for member in clan.players:
+                member.retrieveTanks()
+                loopCount = 0
+                if member.newMarks[0] != 0:
+                    for newMarks in member.newMarks:
+                        await channel.send("**{}** has gained a new mark on his **{}** he had **{}** and now it is **{}** good stuff!".format(member.name, newMarks.name, newMarks.getPreviousMark(), newMarks.getMark()))
+                        loopCount+=1
+                    member.newMarks = [0] * 100
+        else:
+            await channel.send("Before checking marks, please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
 
 @bot.command(name="find", help="Finds a clan.", description="Finds a clan based on the tag and shows various data of the clan. \n Example: '!find TNKCS'")
 async def find(ctx, arg):
@@ -149,7 +145,7 @@ async def debug(ctx, playerName, tankName):
             if x.name == playerName:
                 for y in x.tanks:
                     if y.name == tankName:
-                        await ctx.send("{} has {} mark(s) on the {}.".format(x.name, y.getMark(), y.getName()))
+                        await ctx.send("**{}** has **{}** mark(s) on the **{}**.".format(x.name, y.getMark(), y.getName()))
     else:
         await ctx.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
 
@@ -163,12 +159,8 @@ async def checkMarks(ctx):
                 for newMarks in member.newMarks:
                     await ctx.send("**{}** has gained a new mark on his **{}** he had **{}** and now it is **{}** good stuff!".format(member.name, newMarks.name, newMarks.getPreviousMark(), newMarks.getMark()))
                     loopCount+=1
-                    break
                 member.newMarks = [0] * 100
-            else:
-                await ctx.send("No new marks for {}".format(member.name))
-            break
     else:
         await ctx.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
 
-bot.run('NjU0ODA1Nzk2NDk1OTQ5ODM3.XiMtCQ.XGUfmn97XD0S3l7qm5g6qbr-3yU')
+bot.run('NjU0ODA1Nzk2NDk1OTQ5ODM3.XiM3MQ.bDYvjM3bbxG9ZuSKCsgaUMLr30s')
