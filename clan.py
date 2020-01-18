@@ -1,5 +1,7 @@
 import requests
 import json
+from player import Player
+from tank import Tank
 
 class Clan:
     #var
@@ -15,6 +17,9 @@ class Clan:
     commander = ""
     description = ""
     members_count = 0
+    playersCount = 0
+    players = []
+    tanks = []
     motto = ""
     updated_at = ""
     #Stronghold statistics
@@ -66,4 +71,33 @@ class Clan:
         self.gm_6_str = "Rating: **" + str(self.global_map['gm_6']['value']) + "**\nRank: **" + str(self.global_map['gm_6']['rank']) + "**\nRank Change: **" + str(self.global_map['gm_6']['rank_delta']) + "**"
         self.gm_8_str = "Rating: **" + str(self.global_map['gm_8']['value']) + "**\nRank: **" + str(self.global_map['gm_8']['rank']) + "**\nRank Change: **" + str(self.global_map['gm_8']['rank_delta']) + "**"
         self.gm_10_str = "Rating: **" + str(self.global_map['gm_10']['value']) + "**\nRank: **" + str(self.global_map['gm_10']['rank']) + "**\nRank Change: **" + str(self.global_map['gm_10']['rank_delta']) + "**"
+
+    def getPlayers(self):
+        #all players in clan, with name & id & player count
+        api_url = "https://api.worldoftanks.eu/wot/clans/info/?application_id=1119ac87433be4957549e3f3e83e18d4&clan_id={}&fields=members_count%2C+members.account_id%2C+members.account_name".format(self.id)
+        response = requests.get(api_url)
+        jsonResponse = response.json()['data'][str(self.id)]
+
+        self.playersCount = jsonResponse['members_count']
+        self.players = [0] * self.playersCount
+
+        loopCount = 0
+        for member in jsonResponse['members']:
+            self.players[loopCount] = Player(member['account_id'], member['account_name'], self.tanks)
+            loopCount+=1
+    
+    def getTankNames(self):
+        #https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=1119ac87433be4957549e3f3e83e18d4&fields=name%2C+tank_id&tier=5%2C6%2C7%2C8%2C9%2C10&page_no=1
+        for x in range (1, 6):
+            api_url = "https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=1119ac87433be4957549e3f3e83e18d4&fields=name%2C+tank_id&tier=5%2C6%2C7%2C8%2C9%2C10&page_no={}".format(x)
+            response = requests.get(api_url)
+            jsonResponse = response.json()['data']
+            if x == 1:
+                self.tanks = [0] * response.json()['meta']['total']
+
+            for index, item in enumerate(jsonResponse):
+                if x == 1:
+                    self.tanks[index] = Tank(jsonResponse[item]['tank_id'], jsonResponse[item]['name'])
+                else:
+                    self.tanks[index + ((x*100)-100)] = Tank(jsonResponse[item]['tank_id'], jsonResponse[item]['name'])
 

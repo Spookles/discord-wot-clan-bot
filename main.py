@@ -3,12 +3,13 @@ import json
 from clan import Clan
 import discord
 from discord.ext import tasks, commands
-from datetime import datetime
+import datetime
 import asyncio
 
 clan = Clan()
-send_time='06:00'
+send_time='20:00'
 bot = commands.Bot(command_prefix='!')
+clanIsSet = False
 
 def getClan(tag):
     api_url = "https://api.worldoftanks.eu/wot/clans/list/?application_id=0ecfda2435a084d16fa9e02ea75ee0db&search=%s" % (tag)
@@ -22,7 +23,6 @@ def getClan(tag):
         clan.emblem_url = json['emblems']['x195']['portal']
         clan.getDetails(clan.id)
         clan.getRating(clan.id)
-        print(clan.id)
         return True
     else:
         return False
@@ -34,7 +34,7 @@ async def on_ready():
 @tasks.loop(seconds=50)
 async def sendRatingDaily(id: int, tag: str):
     channel = bot.get_channel(id)
-    now = datetime.strftime(datetime.now(), '%H:%M')
+    now = datetime.datetime.strftime(datetime.datetime.now(), '%H:%M')
     if(now == send_time):
         if(getClan(tag)):
             color_str = "0x" + clan.color[1:]
@@ -48,11 +48,27 @@ async def sendRatingDaily(id: int, tag: str):
             embed.add_field(name="T6", value=clan.gm_6_str, inline=True)
             embed.add_field(name="T8", value=clan.gm_8_str, inline=True)
             embed.add_field(name="T10", value=clan.gm_10_str, inline=True)
-            footer_text = "Updated Statistics at: " + str(datetime.fromtimestamp(clan.updated_at))
+            footer_text = "Updated Statistics at: " + str(datetime.datetime.fromtimestamp(clan.updated_at))
             embed.set_footer(text=footer_text)
             await channel.send(embed=embed)
         else:
             await channel.send("Invalid clan tag")
+
+    if clanIsSet == True:
+        for member in clan.players:
+            member.retrieveTanks()
+            loopCount = 0
+            if member.newMarks[0] != 0:
+                for newMarks in member.newMarks:
+                    await channel.send("**{}** has gained a new mark on his **{}** he had **{}** and now it is **{}** good stuff!".format(member.name, newMarks.name, newMarks.getPreviousMark(), newMarks.getMark()))
+                    loopCount+=1
+                    break
+                member.newMarks = [0] * 100
+            else:
+                await channel.send("No new marks for {}".format(member.name))
+            break
+    else:
+        await channel.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
 
 @bot.command(name="find", help="Finds a clan.", description="Finds a clan based on the tag and shows various data of the clan. \n Example: '!find TNKCS'")
 async def find(ctx, arg):
@@ -64,7 +80,7 @@ async def find(ctx, arg):
         embed.add_field(name="\u200b", value=clan.description, inline=False)
         embed.add_field(name="Commander", value=clan.commander, inline=True)
         embed.add_field(name="Member Count", value=clan.members_count, inline=True)
-        embed.add_field(name="Created at", value=str(datetime.fromtimestamp(clan.created_at)), inline=False)
+        embed.add_field(name="Created at", value=str(datetime.datetime.fromtimestamp(clan.created_at)), inline=False)
         embed.add_field(name="Creator", value=clan.created_by, inline=True)
         await ctx.send(embed=embed)
     else:
@@ -84,7 +100,7 @@ async def rating(ctx, arg):
         embed.add_field(name="T6", value=clan.gm_6_str, inline=True)
         embed.add_field(name="T8", value=clan.gm_8_str, inline=True)
         embed.add_field(name="T10", value=clan.gm_10_str, inline=True)
-        footer_text = "Updated Statistics at: " + str(datetime.fromtimestamp(clan.updated_at))
+        footer_text = "Updated Statistics at: " + str(datetime.datetime.fromtimestamp(clan.updated_at))
         embed.set_footer(text=footer_text)
         await ctx.send(embed=embed)
     else:
@@ -103,7 +119,7 @@ async def skirmish(ctx, tag: str, tier: str):
         elif(tier == '10' or tier == 't10'):
             embed.add_field(name="T6", value=clan.sm_10_str, inline=True)
         embed.set_thumbnail(url=clan.emblem_url)
-        footer_text = "Updated Statistics at: " + str(datetime.fromtimestamp(clan.updated_at))
+        footer_text = "Updated Statistics at: " + str(datetime.datetime.fromtimestamp(clan.updated_at))
         embed.set_footer(text=footer_text)
         await ctx.send(embed=embed)
     else:
@@ -113,4 +129,46 @@ async def skirmish(ctx, tag: str, tier: str):
 async def setDaily(ctx, arg):
     sendRatingDaily.start(ctx.channel.id, arg)
 
-bot.run('NjU0ODA1Nzk2NDk1OTQ5ODM3.XfkJog.vgr4XbSj0ikxOxlZVNlNEvKpLrk')
+@bot.command(name="setClan", help="Sets the clan to check MoE for.")
+async def setClan(ctx, arg):
+    a = datetime.datetime.now()
+    await ctx.send("Retrieving all data for the first time, this might take a while. I'll let you know when I'm finished :)")
+    getClan(arg)
+    clan.getTankNames()
+    clan.getPlayers()
+    b = datetime.datetime.now()
+    delta = b-a
+    await ctx.send("Whew, that took me {} seconds. But we're all done!".format(delta.seconds))
+    global clanIsSet
+    clanIsSet = True
+
+@bot.command(name="debug")
+async def debug(ctx, playerName, tankName):
+    if clanIsSet == True:
+        for x in clan.players:
+            if x.name == playerName:
+                for y in x.tanks:
+                    if y.name == tankName:
+                        await ctx.send("{} has {} mark(s) on the {}.".format(x.name, y.getMark(), y.getName()))
+    else:
+        await ctx.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
+
+@bot.command(name="checkMarks")
+async def checkMarks(ctx):
+    if clanIsSet == True:
+        for member in clan.players:
+            member.retrieveTanks()
+            loopCount = 0
+            if member.newMarks[0] != 0:
+                for newMarks in member.newMarks:
+                    await ctx.send("**{}** has gained a new mark on his **{}** he had **{}** and now it is **{}** good stuff!".format(member.name, newMarks.name, newMarks.getPreviousMark(), newMarks.getMark()))
+                    loopCount+=1
+                    break
+                member.newMarks = [0] * 100
+            else:
+                await ctx.send("No new marks for {}".format(member.name))
+            break
+    else:
+        await ctx.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
+
+bot.run('NjU0ODA1Nzk2NDk1OTQ5ODM3.XiMtCQ.XGUfmn97XD0S3l7qm5g6qbr-3yU')
