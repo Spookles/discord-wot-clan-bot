@@ -2,6 +2,9 @@ import requests
 import json
 from tank import Tank
 import copy
+import aiohttp
+import asyncio
+import discord
 
 class Player:
     def __init__(self, _id, _name, _tanks):
@@ -13,34 +16,23 @@ class Player:
         self.newMarks = [0] * 100
         self.firstLoop = True
         self.tankCount = 0
-        self.retrieveTanks()
-        print("Retrieved all tanks!")
 
-    def retrieveTanks(self):
-        api_url = "https://api.worldoftanks.eu/wot/tanks/achievements/?application_id=1119ac87433be4957549e3f3e83e18d4&account_id={}&fields=achievements%2C+tank_id".format(self.id)
-        response = requests.get(api_url)
-        jsonResponse = response.json()['data'][str(self.id)]
-
-        loopCount = 0
-        if not response.json()['data'][str(self.id)] == None:
-            for tank in jsonResponse:
-                for tankDB in self.tanks:
-                    if tank['tank_id'] == tankDB.id:
-                        try:
-                            tankDB.setPreviousMark(tankDB.getMark())
-                            tankDB.setMark(int(tank['achievements']['marksOnGun']))
-                            print(self.name)
-                            print(tankDB.name)
-                            print(tankDB.getMark())
-                            print(tankDB.getPreviousMark())
-                            print("--------------")
-                            if self.firstLoop != True:
-                                print(tankDB.getMark())
-                                print(tankDB.getPreviousMark())
-                                print("~~~~~~~~~~~~~~")
-                                if tankDB.getMark() != tankDB.getPreviousMark():
-                                    self.newMarks[loopCount] = tankDB
-                                    loopCount+=1
-                        except:
-                            False
-        self.firstLoop = False
+    async def retrieveTanks(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.worldoftanks.eu/wot/tanks/achievements/?application_id=1119ac87433be4957549e3f3e83e18d4&account_id={}&fields=achievements%2C+tank_id'.format(self.id)) as r:
+                json = (await r.json())['data'][str(self.id)]
+                loopCount = 0
+                if not json == None:
+                    for tank in json:
+                        for tankDB in self.tanks:
+                            if tank['tank_id'] == tankDB.id:
+                                try:
+                                    tankDB.setPreviousMark(tankDB.getMark())
+                                    tankDB.setMark(int(tank['achievements']['marksOnGun']))
+                                    if self.firstLoop != True:
+                                        if tankDB.getMark() != tankDB.getPreviousMark():
+                                            self.newMarks[loopCount] = tankDB
+                                            loopCount+=1
+                                except:
+                                    False
+                self.firstLoop = False
