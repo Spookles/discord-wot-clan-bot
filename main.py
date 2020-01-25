@@ -56,7 +56,7 @@ async def sendRatingDaily(channel_id, guild_id):
             loopCount = 0
             for newMarks in member.newMarks:
                 if member.newMarks[loopCount] != 0:
-                    await channel.send("**{}** has gained a new mark on his **{}** it went from **{}** and now it's **{}** good stuff!".format(member.name, newMarks.name, newMarks.getPreviousMark(), newMarks.getMark()))
+                    await channel.send("**{}** has gained a new mark on his **{}** it went from **{}** and now it's **{}** good stuff!".format(member.name, newMarks.name, newMarks.previousMark, newMarks.mark))
                     member.newMarks[loopCount] = 0
                     loopCount+=1
                     totalMarks+=1

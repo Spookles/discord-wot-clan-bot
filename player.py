@@ -27,10 +27,10 @@ class Player:
                         for tankDB in self.tanks:
                             if tank['tank_id'] == tankDB.id:
                                 try:
-                                    tankDB.setPreviousMark(tankDB.getMark())
-                                    tankDB.setMark(int(tank['achievements']['marksOnGun']))
+                                    tankDB.previousMark = tankDB.mark
+                                    tankDB.mark = (int(tank['achievements']['marksOnGun']))
                                     if self.firstLoop != True:
-                                        if tankDB.getMark() != tankDB.getPreviousMark():
+                                        if tankDB.mark != tankDB.previousMark:
                                             self.newMarks[loopCount] = tankDB
                                             loopCount+=1
                                 except:

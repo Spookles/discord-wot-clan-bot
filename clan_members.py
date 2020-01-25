@@ -25,7 +25,7 @@ class ClanMembers(commands.Cog):
                     foundPlayer = True
                     for y in x.tanks:
                         if y.name == tankName:
-                            await ctx.send("**{}** has **{}** mark(s) on the **{}**.".format(x.name, y.getMark(), y.getName()))
+                            await ctx.send("**{}** has **{}** mark(s) on the **{}**.".format(x.name, y.mark, y.getName()))
         else:
             await ctx.send("Please set a clan first with '{}setClan clantag'.".format(self.bot.command_prefix))
 
