@@ -17,7 +17,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 clanDict = {}
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix=':')
 
 @bot.event
 async def on_ready():
@@ -50,7 +50,7 @@ async def sendRatingDaily(channel_id, guild_id):
         embed.set_footer(text=footer_text)
         await channel.send(embed=embed)
         await channel.send("Lets see if anyone got some new marks!")
-        totalMarks = 0;
+        totalMarks = 0
         for member in clan.players:
             await member.retrieveTanks()
             loopCount = 0
