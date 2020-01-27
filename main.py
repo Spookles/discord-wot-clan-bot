@@ -78,6 +78,7 @@ async def updateTime(ctx, time):
     else :
         await ctx.send("Please set a clan first with '{}setClan clantag'.".format(bot.command_prefix))
 
+#name="setClan", help="Attaches a clan to the server"
 @bot.command(brief="Links a clan to your Discord server", description="By using this method a World of Tanks clan will be matched with your server. This will make it possible to have daily updates of your clan!")
 async def setClan(ctx, clanTag):
     clan = await GlobalFunc.getClan(clanTag)
