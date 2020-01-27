@@ -5,6 +5,7 @@ from tank import Tank
 import discord
 import asyncio
 import aiohttp
+import datetime
 
 class Clan:
     def __init__(self, _id, _name, _tag, _emblem_url):
@@ -26,6 +27,7 @@ class Clan:
         self.tanks = []
         self.motto = ""
         self.updated_at = ""
+        self.metaTanks = []
         #Stronghold statistics
         self.skirmish = {
             'fb_6': {'value': '', 'rank': '', 'rank_delta': ''},
@@ -76,7 +78,6 @@ class Clan:
                 self.gm_10_str = "Rating: **" + str(self.global_map['gm_10']['value']) + "**\nRank: **" + str(self.global_map['gm_10']['rank']) + "**\nRank Change: **" + str(self.global_map['gm_10']['rank_delta']) + "**"
 
     async def getPlayers(self):
-        #all players in clan, with name & id & player count
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.worldoftanks.eu/wot/clans/info/?application_id=1119ac87433be4957549e3f3e83e18d4&clan_id={}&fields=members_count%2C+members.account_id%2C+members.account_name'.format(self.id)) as r:
                 jsonResponse = (await r.json())['data'][str(self.id)]
@@ -86,7 +87,7 @@ class Clan:
                 for member in jsonResponse['members']:
                     self.players[loopCount] = Player(member['account_id'], member['account_name'], self.tanks)
                     await self.players[loopCount].retrieveTanks()
-                    print("Retrieved all tanks for {} from clan {}.".format(self.players[loopCount].name, self.tag))
+                    print("{}::Retrieved all tanks for {} from clan {}.".format(datetime.datetime.now(), self.players[loopCount].name, self.tag))
                     loopCount+=1
     
     async def getTankNames(self):

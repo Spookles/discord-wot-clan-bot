@@ -9,6 +9,7 @@ import datetime
 import asyncio
 import aiohttp
 import re
+from global_func import GlobalFunc
 
 class ClanMembers(commands.Cog):
     """This category contains commands that do things with the members of clans."""
@@ -19,13 +20,23 @@ class ClanMembers(commands.Cog):
     @commands.command(brief="This command can grab the MoE of a specific player and tank", description="The bot is very picky, so make sure the names of players and tanks are exactly the same! For proper name reference it might be smart to hit up the Wargaming Developer Room.")
     async def moe(self, ctx, playerName, tankName):
         foundPlayer = False
-        if self.clanDict[ctx.guild.id].clanIsSet:
-            for x in self.clanDict[ctx.guild.id].players:
+        clan = self.clanDict[ctx.guild.id]
+        if tankName != "meta":
+            tankName = await GlobalFunc.findTankByName(tankName, clan.tanks)
+        if clan.clanIsSet:
+            for x in clan.players:
                 if x.name == playerName:
                     foundPlayer = True
-                    for y in x.tanks:
-                        if y.name == tankName:
-                            await ctx.send("**{}** has **{}** mark(s) on the **{}**.".format(x.name, y.mark, y.name))
+                    if tankName == "meta":
+                        for y in x.tanks:
+                            if y.id in clan.metaTanks:
+                                await ctx.send("**{}** has **{}** mark(s) on the **{}**.".format(x.name, y.mark, y.name))
+                    else:
+                        for y in x.tanks:
+                            if y.name == tankName:
+                                await ctx.send("**{}** has **{}** mark(s) on the **{}**.".format(x.name, y.mark, y.name))
+                            elif tankName == "404":
+                                await ctx.send("Could not find the tank you were looking for. Try to be more specific.")
         else:
             await ctx.send("Please set a clan first with '{}setClan clantag'.".format(self.bot.command_prefix))
 
@@ -56,7 +67,7 @@ class ClanMembers(commands.Cog):
                             loopCount = 0
                             for newMarks in x.newMarks:
                                 if x.newMarks[loopCount] != 0:
-                                    await ctx.send("**{}** has gained a new mark on his **{}** it went from **{}** and now it's **{}** good stuff!".format(x.name, newMarks.name, newMarks.previousMark, newMarks.mark))
+                                    await ctx.send("**{}** : **{}** - **{}** > **{}**".format(x.name, newMarks.name, newMarks.previousMark, newMarks.mark))
                                     x.newMarks[loopCount] = 0
                                     loopCount+=1
                                     totalMarks+=1

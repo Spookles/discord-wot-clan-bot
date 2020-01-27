@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix=':')
 
 @bot.event
 async def on_ready():
-    bot.add_cog(ClanRating(bot))
+    bot.add_cog(ClanRating(bot, clanDict))
     bot.add_cog(ClanMembers(bot, clanDict))
     for guild in bot.guilds:
         print(
@@ -29,12 +29,18 @@ async def on_ready():
             f'{guild.name}(id: {guild.id})'
         )
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
+    raise error
+
 @tasks.loop(minutes=1.0)
 async def sendRatingDaily(channel_id, guild_id):
     channel = bot.get_channel(channel_id)
     now = datetime.datetime.strftime(datetime.datetime.now(), '%H:%M')
     clan = clanDict[guild_id]
-    if(now == clan.send_time):
+    if now == clan.send_time:
         color_str = "0x" + clan.color[1:]
         embed = discord.Embed(title=clan.name, description=clan.motto, color=int(color_str, 16))
         embed.set_thumbnail(url=clan.emblem_url)
@@ -49,20 +55,8 @@ async def sendRatingDaily(channel_id, guild_id):
         footer_text = "Updated Statistics at: " + str(datetime.datetime.fromtimestamp(clan.updated_at))
         embed.set_footer(text=footer_text)
         await channel.send(embed=embed)
-        await channel.send("Lets see if anyone got some new marks!")
-        totalMarks = 0
-        for member in clan.players:
-            await member.retrieveTanks()
-            loopCount = 0
-            for newMarks in member.newMarks:
-                if member.newMarks[loopCount] != 0:
-                    await channel.send("**{}** has gained a new mark on his **{}** it went from **{}** and now it's **{}** good stuff!".format(member.name, newMarks.name, newMarks.previousMark, newMarks.mark))
-                    member.newMarks[loopCount] = 0
-                    loopCount+=1
-                    totalMarks+=1
-        if totalMarks == 0:
-            await channel.send("No new marks today :(")
-        print("Updated server {} at {}".format(guild_id, clan.send_time))
+        await GlobalFunc.checkNewMarks(channel, clan)
+        print("{}::Updated server {}".format(datetime.datetime.now(), guild_id))
 
 @bot.command(brief="Set channel and clan for daily updates", description="Sets the channel the bot is allowed to speak in by itself. Also starts the automatic messages for daily updates by default at 20:00CE(S)T.")
 async def setDaily(ctx):
