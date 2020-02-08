@@ -85,6 +85,7 @@ class Clan:
                 self.players = [0] * self.playersCount
                 loopCount = 0
                 for member in jsonResponse['members']:
+                    loopCount2 = 0
                     self.players[loopCount] = Player(member['account_id'], member['account_name'], self.tanks)
                     await self.players[loopCount].retrieveTanks()
                     print("{}::Retrieved all tanks for {} from clan {}.".format(datetime.datetime.now(), self.players[loopCount].name, self.tag))

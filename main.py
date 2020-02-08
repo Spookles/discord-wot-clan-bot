@@ -56,7 +56,6 @@ async def sendRatingDaily(channel_id, guild_id):
         footer_text = "Updated Statistics at: " + str(datetime.datetime.fromtimestamp(clan.updated_at))
         embed.set_footer(text=footer_text)
         await channel.send(embed=embed)
-        await clan.getPlayers()
         await GlobalFunc.checkNewMarks(channel, clan)
         print("{}::Updated server {}".format(datetime.datetime.now(), guild_id))
 
@@ -99,6 +98,12 @@ async def setClan(ctx, clanTag):
             await ctx.send("Server has already set a clan.")
     else:
         await ctx.send("Invalid clan tag.")
+
+@bot.command(brief="", description="")
+async def updatePlayers(ctx):
+    clan = clanDict[ctx.guild.id]
+    await clan.getPlayers()
+    await ctx.send("Players have been updated!")
 
 @bot.command(brief="pong!", description="Returns the latency of the bot.")
 async def ping(ctx):
