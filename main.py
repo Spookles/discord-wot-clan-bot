@@ -40,6 +40,7 @@ async def sendRatingDaily(channel_id, guild_id):
     channel = bot.get_channel(channel_id)
     now = datetime.datetime.strftime(datetime.datetime.now(), '%H:%M')
     clan = clanDict[guild_id]
+    clan = await GlobalFunc.getClan(clan.tag)
     if now == clan.send_time:
         color_str = "0x" + clan.color[1:]
         embed = discord.Embed(title=clan.name, description=clan.motto, color=int(color_str, 16))
@@ -55,6 +56,7 @@ async def sendRatingDaily(channel_id, guild_id):
         footer_text = "Updated Statistics at: " + str(datetime.datetime.fromtimestamp(clan.updated_at))
         embed.set_footer(text=footer_text)
         await channel.send(embed=embed)
+        await clan.getPlayers()
         await GlobalFunc.checkNewMarks(channel, clan)
         print("{}::Updated server {}".format(datetime.datetime.now(), guild_id))
 
